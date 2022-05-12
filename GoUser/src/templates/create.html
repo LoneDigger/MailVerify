@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+
+<head>
+    <meta charset="utf-8">
+    <title>建立帳號</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.1.3/dist/css/bootstrap.min.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.1.3/dist/js/bootstrap.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.slim.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+</head>
+
+<body>
+    <nav class="navbar navbar-dark bg-dark">
+        <a class="navbar-brand" href="#">建立帳號</a>
+    </nav>
+    <div style="padding:20px">
+        <form>
+            <div class="form-group">
+                <label for="name_input">*名稱</label>
+                <input class="form-control" id="name_input" placeholder="Name">
+            </div>
+            <div class="form-group">
+                <label for="mail_input">*信箱</label>
+                <input type="email" class="form-control" id="mail_input" placeholder="name@example.com">
+            </div>
+            <div class="form-group">
+                <label for="password_input">*密碼</label>
+                <input type="password" class="form-control" id="password_input" placeholder="Password">
+            </div>
+            <input id="token_input" value="{{ .token }}" style="display:none">
+        </form>
+        <button id="send" class="btn btn-primary mb-2">送出</button>
+    </div>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            toastr.options = {
+                "closeButton": false,
+                "newestOnTop": false,
+                "progressBar": true,
+                "positionClass": "toast-top-right",
+                "preventDuplicates": false,
+                "timeOut": "5000",
+                "extendedTimeOut": "100",
+                "showEasing": "swing",
+                "hideEasing": "linear",
+                "showMethod": "fadeIn",
+                "hideMethod": "fadeOut"
+            }
+
+            $("#send").click(function () {
+                json = JSON.stringify({
+                    name: $("#name_input").val(),
+                    mail: $("#mail_input").val(),
+                    password: $("#password_input").val(),
+                    token: $("#token_input").val(),
+                });
+
+                axios.post('/create', json, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                }).then(function (response) {
+
+                    if (response.data["result"]) {
+                        $("#name_input").val('')
+                        $("#mail_input").val('')
+                        $("#password_input").val('')
+
+                        toastr.success(response.data["message"])
+                    } else {
+                        toastr.warning(response.data["message"])
+                    }
+                }).catch(function (error) {
+                    toastr.error(error)
+                })
+            })
+        })
+    </script>
+</body>
+
+</html>

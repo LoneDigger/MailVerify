@@ -1,0 +1,13 @@
+name: log
+
+mongo:
+  host: 172.16.0.12
+  port: 27017
+  username: mongodb
+  password: mongodb
+
+msg:
+  host: 172.16.0.13
+  port: 5672
+  username: user
+  password: user

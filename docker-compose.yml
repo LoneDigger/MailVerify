@@ -1,0 +1,111 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: 'postgres:14.2'
+    ports:
+      - '5432:5432'
+    volumes:
+      - './postgres/data:/var/lib/postgresql/data/'
+      - './postgres/init.sql:/docker-entrypoint-initdb.d/init.sql'
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - PGDATA=/var/lib/postgresql/data/
+    networks:
+      reg:
+        ipv4_address: 172.16.0.11
+
+  mongodb:
+    image: 'mongo:5.0.7'
+    ports:
+      - '27017:27017'
+    volumes:
+      - './mongodb/data:/data/db'
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=mongodb
+      - MONGO_INITDB_ROOT_PASSWORD=mongodb
+    networks:
+      reg:
+        ipv4_address: 172.16.0.12
+
+  rabbitmq:
+    image: 'rabbitmq:management'
+    command: rabbitmq-server
+    ports:
+      - '5672:5672'
+      - '15672:15672'
+      - '15692:15692'
+    volumes:
+      - './rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf'
+      - './rabbitmq/definitions.json:/etc/rabbitmq/definitions.json'
+    networks:
+      reg:
+        ipv4_address: 172.16.0.13
+
+  redis:
+    build:
+      context: .
+      dockerfile: Dockerfile.redis
+    ports:
+      - '6379:6379'
+    volumes:
+      - './redis/data:/data'
+    networks:
+      reg:
+        ipv4_address: 172.16.0.14
+
+  user:
+    build:
+      context: .
+      dockerfile: Dockerfile.user
+    ports:
+      - '80:80'
+    depends_on:
+      - postgres
+      - rabbitmq
+      - redis
+    links:
+      - postgres
+      - rabbitmq
+      - redis
+    restart: always 
+    networks:
+      reg:
+        ipv4_address: 172.16.0.15
+
+  mail:
+    build:
+      context: .
+      dockerfile: Dockerfile.mail
+    depends_on:
+      - rabbitmq
+    links:
+      - rabbitmq
+    restart: always 
+    networks:
+      reg:
+        ipv4_address: 172.16.0.16
+
+  logger:
+    build:
+      context: .
+      dockerfile: Dockerfile.logger
+    depends_on:
+      - mongodb
+      - rabbitmq
+    links:
+      - mongodb
+      - rabbitmq
+    restart: always 
+    networks:
+      reg:
+        ipv4_address: 172.16.0.17
+
+networks:
+  reg:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.16.0.0/16
+          gateway: 172.16.0.1

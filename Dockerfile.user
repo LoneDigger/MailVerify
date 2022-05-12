@@ -1,0 +1,23 @@
+# docker pull golang:1.17.3-buster
+FROM golang:1.17.3-buster AS builder
+
+WORKDIR /var/www
+
+COPY ./GoUser/ ./
+
+RUN go mod download
+
+RUN CGO_ENABLED=0 GOOS=linux go build -gcflags '-N -l' -o ./bin/out.a ./src/main.go
+
+####################################################################################################
+
+# docker pull alpine:3.15.4
+FROM alpine:3.15.4
+
+WORKDIR /var/www
+
+COPY --from=builder /var/www/bin/out.a ./out.a
+COPY --from=builder /var/www/src/config.yml ./config.yml
+COPY --from=builder /var/www/src/templates ./templates
+
+CMD ["./out.a"]
